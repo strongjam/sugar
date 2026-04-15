@@ -6,6 +6,7 @@ import EntryStep from './components/EntryStep';
 import RecitalStep from './components/RecitalStep';
 import RewardStep from './components/RewardStep';
 import PraiseStep from './components/PraiseStep';
+import LevelSelectionStep from './components/LevelSelectionStep';
 
 function App() {
   const [step, setStep] = useState(localStorage.getItem('sugar_token') ? (localStorage.getItem('sugar_is_admin') === 'true' ? -2 : 1) : -3); 
@@ -20,16 +21,30 @@ function App() {
   const [pendingRamen, setPendingRamen] = useState(null);
   const [finalRewardMessage, setFinalRewardMessage] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [userLevel, setUserLevel] = useState(1);
   const isSubmitting = useRef(false);
 
   const handleSelection = (type) => {
-    setUserType(type);
+    // Clear any previous session state manually (avoid calling handleLogout which calls setStep(-3))
+    localStorage.removeItem('sugar_token');
+    localStorage.removeItem('sugar_user_name');
+    localStorage.removeItem('sugar_is_admin');
     localStorage.setItem('sugar_user_type', type);
-    // For a new selection, ensure we are logged out unless specifically needed
-    if (localStorage.getItem('sugar_token') && localStorage.getItem('sugar_is_admin') !== 'true') {
-        handleLogout();
+    setUserType(type);
+    setUser('');
+    setToken('');
+    setIsAdmin(false);
+    // Foreigner goes to level selection first
+    if (type === 'foreigner') {
+        setStep(-4);
+    } else {
+        setStep(1);
     }
-    setStep(1); 
+  };
+
+  const handleLevelSelect = (level) => {
+    setUserLevel(level);
+    setStep(1);
   };
 
   useEffect(() => {
@@ -38,6 +53,13 @@ function App() {
         handleLogout();
     }
   }, []);
+
+  const computeUserLevel = (records) => {
+    const successDays = records.filter(r => r.high_score >= 85).length;
+    if (successDays >= 7) return 3;
+    if (successDays >= 3) return 2;
+    return 1;
+  };
 
   const checkAlreadySucceeded = async (activeToken, activeUserType) => {
     try {
@@ -49,6 +71,10 @@ function App() {
         });
         if (res.ok) {
             const data = await res.json();
+            // Compute level for foreigner users
+            if (activeUserType === 'foreigner') {
+                setUserLevel(computeUserLevel(data));
+            }
             const now = new Date();
             const today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
             return data.some(row => row.date === today && row.high_score >= 85);
@@ -201,6 +227,7 @@ function App() {
   return (
     <div className="kiosk-container">
       {step === -3 && <SelectionStep onSelect={handleSelection} />}
+      {step === -4 && <LevelSelectionStep onSelect={handleLevelSelect} onBack={() => setStep(-3)} />}
       {step === -2 && <AdminStep token={token} onLogout={handleLogout} />}
       {step === -1 && (
         <AuthStep 
@@ -210,7 +237,7 @@ function App() {
             onBack={() => setStep(-3)} 
         />
       )}
-      {step === 1 && <RecitalStep userType={userType} token={token} onNext={handleRecitalNext} onBack={() => { handleRestart(); }} />}
+      {step === 1 && <RecitalStep userType={userType} token={token} userLevel={userLevel} onNext={handleRecitalNext} onBack={() => { handleRestart(); }} />}
       
       {step === 2 && (
         <RewardStep 

@@ -3,7 +3,7 @@ import { Calendar, Mic, Square, Volume2, ArrowLeft, X } from 'lucide-react';
 import { SFX, speak, getSimilarityScore } from '../utils/mission';
 import { BIBLE_VERSES } from '../data/verses';
 
-const RecitalStep = ({ onNext, onBack, userType, token }) => {
+const RecitalStep = ({ onNext, onBack, userType, token, userLevel = 1 }) => {
     const [isReciting, setIsReciting] = useState(false);
     const [transcript, setTranscript] = useState('');
     const [score, setScore] = useState(null);
@@ -17,7 +17,20 @@ const RecitalStep = ({ onNext, onBack, userType, token }) => {
         return ref.replace(':', '장 ') + '절';
     };
 
-    const dailyVerse = BIBLE_VERSES[Math.floor((new Date().setHours(0,0,0,0) - new Date(2024,0,1).getTime()) / 86400000) % BIBLE_VERSES.length];
+    // Level-based verse selection for foreigner users
+    const getVersePool = () => {
+        if (userType !== 'foreigner') return BIBLE_VERSES;
+        const level1 = BIBLE_VERSES.filter(v => v.text.length <= 40);
+        const level2 = BIBLE_VERSES.filter(v => v.text.length > 40 && v.text.length <= 80);
+        const level3 = BIBLE_VERSES.filter(v => v.text.length > 80);
+        if (userLevel >= 3) return level3.length > 0 ? level3 : BIBLE_VERSES;
+        if (userLevel >= 2) return level2.length > 0 ? level2 : BIBLE_VERSES;
+        return level1.length > 0 ? level1 : BIBLE_VERSES;
+    };
+
+    const versePool = getVersePool();
+    const dayIndex = Math.floor((new Date().setHours(0,0,0,0) - new Date(2024,0,1).getTime()) / 86400000);
+    const dailyVerse = versePool[dayIndex % versePool.length];
     
     const formattedRef = formatReference(dailyVerse.ref);
     // Merge Ref and Text for combined recital
@@ -113,13 +126,17 @@ const RecitalStep = ({ onNext, onBack, userType, token }) => {
                 <p className="subtitle" style={{ color: '#FF6B6B', fontWeight: 'bold' }}>
                     💡 말씀 구절을 처음에 말하시고 이어서 말씀을 암송해주세요.
                 </p>
-                <div style={{ fontSize: '1.2rem', color: '#444', marginTop: '10px' }}>{displayRef}</div>
+                {userType === 'foreigner' && (
+                    <div style={{ display: 'inline-block', background: userLevel === 1 ? '#4CAF50' : userLevel === 2 ? '#FF9800' : '#E53935', color: 'white', borderRadius: '20px', padding: '4px 14px', fontSize: '0.85rem', fontWeight: 'bold', marginTop: '6px', marginBottom: '2px' }}>
+                        Level {userLevel} · {userLevel === 1 ? 'Beginner' : userLevel === 2 ? 'Intermediate' : 'Advanced'}
+                    </div>
+                )}
             </header>
 
             <main>
                 <div className={`mission-card ${isReciting ? 'mosaic' : ''}`}>
                     <p className={`verse-text ${isReciting ? 'mosaic' : ''}`}>
-                        <span style={{ color: '#FF6B6B', display: 'block', fontSize: '1rem', marginBottom: '10px' }}>[{displayRef}]</span>
+                        <span style={{ color: '#FF6B6B', display: 'block', fontSize: '1.3rem', fontWeight: '700', marginBottom: '10px' }}>[{displayRef}]</span>
                         "{displayText}"
                     </p>
                     <button id="btn-listen" className="num-btn special" 
