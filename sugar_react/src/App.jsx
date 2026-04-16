@@ -254,6 +254,7 @@ function App() {
             userType={userType} 
             score={score} 
             token={token}
+            userLevel={userLevel} 
             finalRewardMessage={finalRewardMessage} 
             onRestart={handleRestart} 
         />

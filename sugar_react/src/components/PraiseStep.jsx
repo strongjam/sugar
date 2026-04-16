@@ -3,7 +3,7 @@ import { CheckCircle2, Award, Heart, Smile, Star, Crown, Sparkles, History, X, C
 import { BIBLE_VERSES } from '../data/verses';
 import { SFX } from '../utils/mission';
 
-const PraiseStep = ({ user, userType, score, token, finalRewardMessage, onRestart }) => {
+const PraiseStep = ({ user, userType, score, token, userLevel = 1, finalRewardMessage, onRestart }) => {
     const [stampCount, setStampCount] = useState(0);
     const [isLoading, setIsLoading] = useState(userType === 'korean' && score >= 85);
     const [showArchive, setShowArchive] = useState(false);
@@ -38,18 +38,36 @@ const PraiseStep = ({ user, userType, score, token, finalRewardMessage, onRestar
 
     const formatReference = (ref) => {
         if (!ref) return "";
-        return ref.replace(':', '장 ') + '절';
+        const isPsalm = ref.startsWith('시편');
+        return ref.replace(':', isPsalm ? '편 ' : '장 ') + '절';
     };
 
     const getPastVerses = () => {
+        const getVersePool = () => {
+            if (userType !== 'foreigner') return BIBLE_VERSES;
+            const level1 = BIBLE_VERSES.filter(v => v.text.length <= 40);
+            const level2 = BIBLE_VERSES.filter(v => v.text.length > 40 && v.text.length <= 80);
+            const level3 = BIBLE_VERSES.filter(v => v.text.length > 80);
+            if (userLevel >= 3) return level3.length > 0 ? level3 : BIBLE_VERSES;
+            if (userLevel >= 2) return level2.length > 0 ? level2 : BIBLE_VERSES;
+            return level1.length > 0 ? level1 : BIBLE_VERSES;
+        };
+
+        const pool = getVersePool();
         const today = new Date().setHours(0,0,0,0);
         const dayMs = 86400000;
         const past = [];
         for (let i = 1; i <= 7; i++) {
             const date = new Date(today - (i * dayMs));
             const isoDate = date.toISOString().split('T')[0];
-            const idx = Math.floor((date.getTime() - new Date(2024,0,1).getTime()) / dayMs) % BIBLE_VERSES.length;
-            past.push({ date: date.toLocaleDateString(), isoDate, ...BIBLE_VERSES[idx], formattedRef: formatReference(BIBLE_VERSES[idx].ref) });
+            const idx = Math.floor((date.getTime() - new Date(2024,0,1).getTime()) / dayMs) % pool.length;
+            const verse = pool[idx];
+            past.push({ 
+                date: date.toLocaleDateString(), 
+                isoDate, 
+                ...verse, 
+                formattedRef: formatReference(verse.ref) 
+            });
         }
         return past;
     };
