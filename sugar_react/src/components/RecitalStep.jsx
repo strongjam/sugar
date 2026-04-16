@@ -14,7 +14,9 @@ const RecitalStep = ({ onNext, onBack, userType, token, userLevel = 1 }) => {
 
     const formatReference = (ref) => {
         if (!ref) return "";
-        return ref.replace(':', '장 ') + '절';
+        // 시편(Psalms)은 '장' 대신 '편'을 사용
+        const isPsalm = ref.startsWith('시편');
+        return ref.replace(':', isPsalm ? '편 ' : '장 ') + '절';
     };
 
     // Level-based verse selection for foreigner users
@@ -134,15 +136,23 @@ const RecitalStep = ({ onNext, onBack, userType, token, userLevel = 1 }) => {
             </header>
 
             <main>
-                <div className={`mission-card ${isReciting ? 'mosaic' : ''}`}>
+                <div className={`mission-card ${isReciting ? 'mosaic' : ''}`} style={{ position: 'relative' }}>
                     <p className={`verse-text ${isReciting ? 'mosaic' : ''}`}>
                         <span style={{ color: '#FF6B6B', display: 'block', fontSize: '1.3rem', fontWeight: '700', marginBottom: '10px' }}>[{displayRef}]</span>
                         "{displayText}"
                     </p>
                     <button id="btn-listen" className="num-btn special" 
-                            style={{ width: '100%', height: '50px', marginTop: '10px' }}
+                            style={{ 
+                                width: '100%', 
+                                height: '52px', 
+                                marginTop: '10px', 
+                                position: 'relative', 
+                                zIndex: 20, 
+                                touchAction: 'manipulation' 
+                            }}
                             onClick={() => speak(fullTargetText, setIsWaveActive)}>
-                        <Volume2 size={20} style={{ marginRight: '8px' }} /> 말씀 듣기 (Listen)
+                        <Volume2 size={20} style={{ marginRight: '8px', pointerEvents: 'none' }} /> 
+                        <span style={{ pointerEvents: 'none' }}>말씀 듣기 (Listen)</span>
                     </button>
                 </div>
 

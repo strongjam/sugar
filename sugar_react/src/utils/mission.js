@@ -24,17 +24,27 @@ export const SFX = {
     }
 };
 
+// Simplified speak function for maximum Android compatibility
 export function speak(text, setWaveActive, callback) {
     if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
+    
+    // Note: window.speechSynthesis.cancel() removed to prevent stalls on Android Chrome
+    
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'ko-KR';
-    utterance.rate = 0.85;
+    utterance.rate = 0.9;
+    
     if (setWaveActive) setWaveActive(true);
+    
     utterance.onend = () => {
         if (setWaveActive) setWaveActive(false);
         if (callback) callback();
     };
+    
+    utterance.onerror = () => {
+        if (setWaveActive) setWaveActive(false);
+    };
+
     window.speechSynthesis.speak(utterance);
 }
 
