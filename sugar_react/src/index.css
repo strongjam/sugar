@@ -305,6 +305,37 @@ footer {
     padding-top: 20px;
 }
 
+/* Level Selection Responsive Styles */
+.level-title-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+}
+
+.level-title-container span {
+    white-space: nowrap;
+}
+
+.level-badge {
+    white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+    .level-title-container {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 6px !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .level-badge {
+        display: inline-block !important;
+        margin-left: 0 !important;
+    }
+}
+
 .progress-container {
     width: 100%;
     height: 10px;

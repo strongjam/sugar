@@ -81,9 +81,10 @@ const LevelSelectionStep = ({ onSelect, onBack }) => {
                             {icon}
                         </div>
                         <div style={{ flex: 1, textAlign: 'left' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                                <span style={{ fontSize: '1.2rem', fontWeight: '800', color }}>Level {level}</span>
-                                <span style={{
+                            <div className="level-title-container" 
+                                 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+                                <span style={{ fontSize: '1.2rem', fontWeight: '800', color, whiteSpace: 'nowrap' }}>Level {level}</span>
+                                <span className="level-badge" style={{
                                     background: color,
                                     color: 'white',
                                     borderRadius: '20px',
